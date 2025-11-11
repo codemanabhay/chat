@@ -77,4 +77,62 @@ router.get('/me', protect, (req, res) => {
   res.json(req.user);
 });
 
+// OAuth Routes
+const passport = require('passport');
+require('../config/passport')(passport);
+
+// @route   GET /api/auth/google
+// @desc    Initiate Google OAuth
+// @access  Public
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+// @route   GET /api/auth/google/callback
+// @desc    Google OAuth callback
+// @access  Public
+router.get('/google/callback', 
+  passport.authenticate('google', { failureRedirect: '/login', session: false }),
+  async (req, res) => {
+    try {
+      const token = generateToken(req.user._id);
+      // Redirect to frontend with token
+      res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&user=${encodeURIComponent(JSON.stringify({
+        _id: req.user._id,
+        username: req.user.username,
+        email: req.user.email,
+        fullName: req.user.fullName,
+        profilePicture: req.user.profilePicture
+      }))}`);
+    } catch (error) {
+      res.redirect(`${process.env.FRONTEND_URL}/login?error=${encodeURIComponent(error.message)}`);
+    }
+  }
+);
+
+// @route   GET /api/auth/github
+// @desc    Initiate GitHub OAuth
+// @access  Public
+router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
+
+// @route   GET /api/auth/github/callback
+// @desc    GitHub OAuth callback
+// @access  Public
+router.get('/github/callback',
+  passport.authenticate('github', { failureRedirect: '/login', session: false }),
+  async (req, res) => {
+    try {
+      const token = generateToken(req.user._id);
+      // Redirect to frontend with token
+      res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&user=${encodeURIComponent(JSON.stringify({
+        _id: req.user._id,
+        username: req.user.username,
+        email: req.user.email,
+        fullName: req.user.fullName,
+        profilePicture: req.user.profilePicture
+      }))}`);
+    } catch (error) {
+      res.redirect(`${process.env.FRONTEND_URL}/login?error=${encodeURIComponent(error.message)}`);
+    }
+  }
+);
+
 module.exports = router;
