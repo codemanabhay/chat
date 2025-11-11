@@ -25,6 +25,17 @@ const userSchema = new mongoose.Schema({
     minlength: [8, 'Password must be at least 8 characters'],
     select: false
   },
+    // OAuth Authentication IDs
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true, // Allows null values to be non-unique
+  },
+  githubId: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
   fullName: {
     type: String,
     trim: true,
