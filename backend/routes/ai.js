@@ -1,16 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
+const axios = require('axios');
 
-// Mock AI responses for demonstration
-// In production, integrate with OpenAI API or similar
-const aiResponses = [
-  "That's an interesting question! Let me think about it...",
-  "I understand what you're asking. Here's what I think...",
-  "Based on what you've shared, I'd suggest...",
-  "That's a great point! Have you considered...",
-  "I'm here to help! Let me provide some insight on that...",
+// OpenRouter configuration with failover models
+const OPENROUTER_MODELS = [
+  {
+    name: 'deepseek/deepseek-chat-v3.1:free',
+    apiKey: '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',
+  },
+  {
+    name: 'openai/gpt-oss-20b:free',
+    apiKey: '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',
+  },
+  {
+    name: 'google/gemma-3n-e2b-it:free',
+    apiKey: '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',
+  },
 ];
+
+// Store AI chat history in memory (in production, use database)
+const aiChatHistory = new Map();
 
 const aiQuestions = [
   "How can I help you today?",
@@ -19,171 +29,136 @@ const aiQuestions = [
   "Would you like me to elaborate on anything?",
 ];
 
-// Store AI chat history in memory (in production, use database)
-const aiChatHistory = new Map();
+// Call OpenRouter API with failover
+async function callOpenRouterAI(messages, modelIndex = 0) {
+  if (modelIndex >= OPENROUTER_MODELS.length) {
+    throw new Error('All AI models failed');
+  }
+
+  const model = OPENROUTER_MODELS[modelIndex];
+
+  try {
+    const response = await axios.post(
+      'https://openrouter.ai/api/v1/chat/completions',
+      {
+        model: model.name,
+        messages: messages,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${model.apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': process.env.FRONTEND_URL || 'http://localhost:3000',
+          'X-Title': 'TweekChat',
+        },
+        timeout: 30000, // 30 second timeout
+      }
+    );
+
+    return response.data.choices[0].message.content;
+  } catch (error) {
+    console.error(`Model ${model.name} failed:`, error.message);
+    
+    // Try next model
+    return callOpenRouterAI(messages, modelIndex + 1);
+  }
+}
 
 // @route   POST /api/ai/chat
 // @desc    Send message to AI and get response
 // @access  Private
 router.post('/chat', protect, async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, conversationId } = req.body;
 
-    if (!message || message.trim().length === 0) {
-      return res.status(400).json({ message: 'Message content required' });
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ message: 'Message is required' });
     }
 
-    // Get or create user's chat history
-    const userId = req.user._id.toString();
-    if (!aiChatHistory.has(userId)) {
-      aiChatHistory.set(userId, []);
+    // Get or create conversation history
+    const userId = req.user.userId;
+    const convId = conversationId || `${userId}-${Date.now()}`;
+    
+    if (!aiChatHistory.has(convId)) {
+      aiChatHistory.set(convId, []);
     }
 
-    const userHistory = aiChatHistory.get(userId);
+    const history = aiChatHistory.get(convId);
 
     // Add user message to history
-    const userMessage = {
+    history.push({
       role: 'user',
       content: message,
-      timestamp: new Date()
-    };
-    userHistory.push(userMessage);
+    });
 
-    // Generate AI response
-    // In production, call OpenAI API here
-    let aiResponse;
-    
-    if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'your_openai_api_key_here') {
-      // TODO: Integrate with OpenAI API
-      // const response = await openai.chat.completions.create({
-      //   model: "gpt-3.5-turbo",
-      //   messages: userHistory.map(msg => ({ role: msg.role, content: msg.content })),
-      // });
-      // aiResponse = response.choices[0].message.content;
-      
-      aiResponse = `I received your message: "${message}". ${aiResponses[Math.floor(Math.random() * aiResponses.length)]}`;
-    } else {
-      // Mock response for development
-      const responses = [
-        `I understand you're asking about "${message}". That's a fascinating topic!`,
-        `Regarding "${message}", here's my perspective...`,
-        `You mentioned "${message}". Let me share some thoughts on that.`,
-        `That's an interesting point about "${message}". Consider this...`,
-      ];
-      aiResponse = responses[Math.floor(Math.random() * responses.length)];
-      
-      // Add follow-up question
-      const followUp = aiQuestions[Math.floor(Math.random() * aiQuestions.length)];
-      aiResponse += ` ${followUp}`;
-    }
+    // Keep only last 10 messages to manage context
+    const recentHistory = history.slice(-10);
+
+    // Call OpenRouter AI with failover
+    const aiResponse = await callOpenRouterAI([
+      {
+        role: 'system',
+        content: 'You are a helpful assistant for TweekChat, a social media chat application. Be friendly, concise, and helpful.',
+      },
+      ...recentHistory,
+    ]);
 
     // Add AI response to history
-    const assistantMessage = {
+    history.push({
       role: 'assistant',
       content: aiResponse,
-      timestamp: new Date()
-    };
-    userHistory.push(assistantMessage);
+    });
 
-    // Keep only last 50 messages
-    if (userHistory.length > 50) {
-      userHistory.splice(0, userHistory.length - 50);
-    }
+    // Update conversation history
+    aiChatHistory.set(convId, history);
+
+    // Get a random follow-up question
+    const followUpQuestion = aiQuestions[Math.floor(Math.random() * aiQuestions.length)];
 
     res.json({
-      message: aiResponse,
-      timestamp: assistantMessage.timestamp
+      response: aiResponse,
+      followUp: followUpQuestion,
+      conversationId: convId,
+      model: 'OpenRouter AI',
     });
   } catch (error) {
     console.error('AI chat error:', error);
-    res.status(500).json({ message: 'AI service error' });
-  }
-});
-
-// @route   GET /api/ai/history
-// @desc    Get user's AI chat history
-// @access  Private
-router.get('/history', protect, async (req, res) => {
-  try {
-    const userId = req.user._id.toString();
-    const history = aiChatHistory.get(userId) || [];
-
-    res.json({
-      history,
-      count: history.length
+    res.status(500).json({
+      message: 'Failed to get AI response. All models are currently unavailable.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
-  } catch (error) {
-    console.error('Get AI history error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// @route   DELETE /api/ai/history
-// @desc    Clear user's AI chat history
-// @access  Private
-router.delete('/history', protect, async (req, res) => {
-  try {
-    const userId = req.user._id.toString();
-    aiChatHistory.delete(userId);
-
-    res.json({ message: 'AI chat history cleared' });
-  } catch (error) {
-    console.error('Clear AI history error:', error);
-    res.status(500).json({ message: 'Server error' });
   }
 });
 
 // @route   GET /api/ai/suggestions
-// @desc    Get suggested questions for AI
+// @desc    Get AI-generated conversation starters
 // @access  Private
 router.get('/suggestions', protect, async (req, res) => {
   try {
-    const suggestions = [
-      "What are some good conversation starters?",
-      "How can I improve my communication skills?",
-      "Tell me something interesting about technology",
-      "What's the best way to stay productive?",
-      "Can you help me brainstorm ideas?",
-      "What are the latest trends in social media?",
-      "How do I make new friends online?",
-      "What makes a good chat application?"
-    ];
-
-    // Return random 4 suggestions
-    const randomSuggestions = suggestions
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 4);
-
-    res.json({ suggestions: randomSuggestions });
+    res.json({
+      suggestions: aiQuestions,
+    });
   } catch (error) {
-    console.error('Get suggestions error:', error);
+    console.error('AI suggestions error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// @route   POST /api/ai/feedback
-// @desc    Submit feedback on AI response
+// @route   DELETE /api/ai/history/:conversationId
+// @desc    Clear AI conversation history
 // @access  Private
-router.post('/feedback', protect, async (req, res) => {
+router.delete('/history/:conversationId', protect, async (req, res) => {
   try {
-    const { messageId, rating, comment } = req.body;
-
-    if (!rating || !['positive', 'negative'].includes(rating)) {
-      return res.status(400).json({ message: 'Valid rating required (positive/negative)' });
+    const { conversationId } = req.params;
+    
+    if (aiChatHistory.has(conversationId)) {
+      aiChatHistory.delete(conversationId);
+      return res.json({ message: 'Conversation history cleared' });
     }
-
-    // In production, store feedback in database
-    console.log('AI Feedback:', {
-      userId: req.user._id,
-      messageId,
-      rating,
-      comment,
-      timestamp: new Date()
-    });
-
-    res.json({ message: 'Feedback received. Thank you!' });
+    
+    res.status(404).json({ message: 'Conversation not found' });
   } catch (error) {
-    console.error('AI feedback error:', error);
+    console.error('AI history delete error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
