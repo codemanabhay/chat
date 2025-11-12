@@ -1,1 +1,187 @@
-import React,{useState,useEffect,useRef}from'react';import{motion}from'framer-motion';import{useSocket}from'../hooks/useSocket';import{useChat}from'../hooks/useChat';import{useAuth}from'../hooks/useAuth';import{ANIMATIONS}from'../utils/animations';const ChatWindow=()=>{const{socket}=useSocket();const{auth}=useAuth();const{messages,sendMessage,receiveMessage}=useChat();const[input,setInput]=useState('');const[isTyping,setIsTyping]=useState(false);const[activeUsers,setActiveUsers]=useState([]);const[selectedUser,setSelectedUser]=useState(null);const messagesEndRef=useRef(null);const inputRef=useRef(null);const typingTimeoutRef=useRef(null);useEffect(()=>{if(messagesEndRef.current){messagesEndRef.current.scrollIntoView({behavior:'smooth'});}},[ messages]);useEffect(()=>{socket?.on('users-list',(users)=>setActiveUsers(users));socket?.on('typing',(data)=>setIsTyping(true));socket?.on('stop-typing',()=>setIsTyping(false));return()=>{socket?.off('users-list');socket?.off('typing');socket?.off('stop-typing');};},[socket]);const handleSendMessage=()=>{if(input.trim()){const messageData={text:input,sender:auth?.user?.id,senderName:auth?.user?.name,timestamp:new Date(),readBy:[auth?.user?.id]};sendMessage(messageData);socket?.emit('message',messageData);setInput('');if(typingTimeoutRef.current)clearTimeout(typingTimeoutRef.current);socket?.emit('stop-typing');}};const handleTyping=(e)=>{setInput(e.target.value);socket?.emit('typing',{user:auth?.user?.name});if(typingTimeoutRef.current)clearTimeout(typingTimeoutRef.current);typingTimeoutRef.current=setTimeout(()=>{socket?.emit('stop-typing');},1500);};const handleKeyPress=(e)=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handleSendMessage();}};return(<motion.div initial={{opacity:0,y:20}}animate={{opacity:1,y:0}}transition={{duration:.5}}className="h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex gap-4 p-4 md:p-6 lg:p-8 max-w-7xl mx-auto"style={{perspective:'1000px'}}"><motion.div initial={{x:-100,opacity:0}}animate={{x:0,opacity:1}}transition={{delay:.2,duration:.6}}className="hidden md:flex flex-col w-64 bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-purple-500/20 overflow-hidden hover:border-purple-500/40 transition-all duration-300" style={{transform:'rotateY(-5deg)',transformStyle:'preserve-3d'}}"><div className="p-4 bg-gradient-to-r from-purple-600/20 to-cyan-600/20 border-b border-purple-500/20"><h2 className="text-white font-bold text-lg">Active Users</h2></div><div className="flex-1 overflow-y-auto scrollbar-hide"><motion.div variants={ANIMATIONS.container}initial="hidden"animate="show"><motion.div variants={ANIMATIONS.item}className="w-full p-3 text-center border-b border-purple-500/10"><span className="text-xs text-purple-300 font-semibold">{activeUsers.length} online</span></motion.div>{activeUsers.map((user,idx)=>(<motion.div key={`${user.id}-${idx}`}variants={ANIMATIONS.item}onClick={()=>setSelectedUser(user)}className={`p-3 cursor-pointer border-b border-purple-500/10 transition-all duration-300 ${selectedUser?.id===user.id?'bg-purple-600/30 border-l-4 border-l-cyan-400':'hover:bg-purple-600/10'}`}"><div className="flex items-center gap-2"><div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-purple-500 flex items-center justify-center text-xs font-bold text-white">{user.name?.[0]?.toUpperCase()}</div><div className="text-left flex-1 min-w-0"><p className="text-sm text-white font-medium truncate">{user.name}</p><p className="text-xs text-green-400">● online</p></div></div></motion.div>))}</motion.div></div></motion.div><motion.div initial={{opacity:0,scale:.95}}animate={{opacity:1,scale:1}}transition={{delay:.3,duration:.6}}className="flex-1 flex flex-col bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-purple-500/20 overflow-hidden hover:border-purple-500/40 transition-all duration-300" style={{transform:'rotateY(3deg)',transformStyle:'preserve-3d',boxShadow:'0 25px 50px rgba(139,92,246,0.3)'}}"><div className="p-4 md:p-6 bg-gradient-to-r from-purple-600/20 to-cyan-600/20 border-b border-purple-500/20 flex justify-between items-center"><div><h1 className="text-white font-bold text-xl md:text-2xl">Message Hub</h1><p className="text-xs md:text-sm text-purple-300">{selectedUser?`Chatting with ${selectedUser.name}`:'Select a user to chat'}</p></div><motion.div animate={{rotate:360}}transition={{duration:20,repeat:Infinity,ease:'linear'}}className="hidden lg:block w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-purple-500 opacity-20"/></div><motion.div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 scrollbar-thin scrollbar-thumb-purple-500/30 scrollbar-track-transparent" initial={{opacity:0}}animate={{opacity:1}}transition={{delay:.4}}"><motion.div variants={ANIMATIONS.container}initial="hidden"animate="show">{messages.length===0?(<motion.div variants={ANIMATIONS.item}className="h-full flex items-center justify-center"><div className="text-center"><motion.div animate={{y:[0,-10,0]}}transition={{duration:2,repeat:Infinity}}className="text-4xl md:text-5xl mb-4">💬</motion.div><p className="text-gray-400 text-sm md:text-base">No messages yet. Start the conversation!</p></div></motion.div>):( messages.map((msg,idx)=>(<motion.div key={`${msg.id}-${idx}`}variants={ANIMATIONS.item}className={`flex ${msg.sender===auth?.user?.id?'justify-end':'justify-start'} mb-4`}"><motion.div initial={{opacity:0,scale:.8}}animate={{opacity:1,scale:1}}transition={{type:'spring',stiffness:200}}className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl ${msg.sender===auth?.user?.id?'bg-gradient-to-br from-cyan-500 to-purple-600 text-white rounded-br-none':'bg-slate-700/80 text-gray-100 rounded-bl-none'} backdrop-blur-sm border ${msg.sender===auth?.user?.id?'border-cyan-400/30':'border-purple-500/20'} shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105`}><p className="text-xs md:text-sm font-semibold text-opacity-70 mb-1">{msg.senderName||'User'}</p><p className="text-sm md:text-base break-words">{msg.text}</p><p className="text-xs mt-2 ${msg.sender===auth?.user?.id?'text-cyan-100':'text-gray-400'} opacity-70">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute:'2-digit'})}</p></motion.div></motion.div>)))}{ isTyping&&(<motion.div variants={ANIMATIONS.item}className="flex justify-start"><motion.div animate={{opacity:[.5,1,.5]}}transition={{duration:1.5,repeat:Infinity}}className="px-4 py-3 rounded-2xl bg-slate-700/50 text-gray-300 text-sm italic flex gap-1"><span>●</span><span>●</span><span>●</span></motion.div></motion.div>)}</motion.div></motion.div></motion.div><motion.div initial={{y:50,opacity:0}}animate={{y:0,opacity:1}}transition={{delay:.5,duration:.6}}className="p-4 md:p-6 bg-gradient-to-t from-slate-900/50 to-slate-800/50 border-t border-purple-500/20 space-y-3" style={{backdropFilter:'blur(10px)'}}"><div className="flex gap-2 md:gap-3"><input ref={inputRef}type="text"value={input}onChange={handleTyping}onKeyPress={handleKeyPress}placeholder="Type your message here.."className="flex-1 px-4 py-3 bg-slate-700/50 border border-purple-500/30 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400 transition-all duration-300 text-sm md:text-base"/><motion.button whileHover={{scale:1.05}}whileTap={{scale:.95}}onClick={handleSendMessage}disabled={!input.trim()}className="px-4 md:px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-sm md:text-base min-w-fit">Send</motion.button></div><p className="text-xs text-gray-400 text-center">Press Enter or click Send</p></motion.div></motion.div></motion.div>);};export default ChatWindow;
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Stories from './Stories';
+
+const ChatWindow = ({ onlineUsers = [], recentChats = [], currentUser = {} }) => {
+  const [messages, setMessages] = useState([
+    { id: 1, sender: 'Sarah', avatar: '👩', text: 'Hey! How are you?', timestamp: '2:30 PM', isOwn: false },
+    { id: 2, sender: 'You', avatar: '👨', text: 'Hey Sarah! Doing great!', timestamp: '2:31 PM', isOwn: true },
+    { id: 3, sender: 'Sarah', avatar: '👩', text: 'That\'s awesome! 🎉', timestamp: '2:32 PM', isOwn: false },
+  ]);
+  const [inputValue, setInputValue] = useState('');
+  const [showStories, setShowStories] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [selectedChat, setSelectedChat] = useState(0);
+  const [reactions, setReactions] = useState({});
+  const messagesEndRef = useRef(null);
+
+  const reactionOptions = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const sendMessage = () => {
+    if (!inputValue.trim()) return;
+    
+    const newMessage = {
+      id: messages.length + 1,
+      sender: 'You',
+      avatar: '👨',
+      text: inputValue,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isOwn: true,
+    };
+    
+    setMessages([...messages, newMessage]);
+    setInputValue('');
+    setIsTyping(true);
+    
+    setTimeout(() => {
+      const response = {
+        id: messages.length + 2,
+        sender: 'Sarah',
+        avatar: '👩',
+        text: 'That sounds great! 😊',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isOwn: false,
+      };
+      setMessages(prev => [...prev, response]);
+      setIsTyping(false);
+    }, 800 + Math.random() * 1200);
+  };
+
+  const toggleReaction = (messageId, emoji) => {
+    setReactions(prev => ({
+      ...prev,
+      [messageId]: prev[messageId] === emoji ? null : emoji,
+    }));
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col rounded-lg overflow-hidden border border-cyan-500/20"
+    >
+      {/* Header */}
+      <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 p-4 flex items-center justify-between border-b border-cyan-500/20">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-purple-500 rounded-full flex items-center justify-center text-lg font-bold">👩</div>
+          <div>
+            <h3 className="text-white font-bold">Sarah Johnson</h3>
+            <p className="text-xs text-green-400">Active now</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} className="text-cyan-400 hover:text-cyan-300 transition-colors">📞</motion.button>
+          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} className="text-cyan-400 hover:text-cyan-300 transition-colors">📹</motion.button>
+          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => setShowStories(!showStories)} className="text-cyan-400 hover:text-cyan-300 transition-colors">📖</motion.button>
+        </div>
+      </div>
+
+      {/* Stories */}
+      <AnimatePresence>
+        {showStories && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="px-4 py-3 border-b border-gray-700 flex items-center gap-3 overflow-x-auto bg-gray-800/50"
+          >
+            {['Sarah', 'Emma', 'Mike', 'Alex'].map((name, idx) => (
+              <motion.div
+                key={idx}
+                whileHover={{ scale: 1.05 }}
+                className="flex flex-col items-center gap-1 cursor-pointer"
+              >
+                <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-purple-500 rounded-full flex items-center justify-center ring-2 ring-cyan-400/50 hover:ring-cyan-400 transition-all">
+                  {['👩', '👱‍♀️', '👨', '👴'][idx]}
+                </div>
+                <span className="text-xs text-gray-300">{name}</span>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 scroll-smooth">
+        {messages.map((msg, idx) => (
+          <motion.div
+            key={msg.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`flex ${msg.isOwn ? 'justify-end' : 'justify-start'} items-end gap-2`}
+          >
+            {!msg.isOwn && <span className="text-xl">{msg.avatar}</span>}
+            <div className="flex flex-col items-start">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className={`max-w-xs px-4 py-2 rounded-2xl ${
+                  msg.isOwn
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-br-none'
+                    : 'bg-gray-700 text-gray-100 rounded-bl-none'
+                }`}
+              >
+                {msg.text}
+              </motion.div>
+              {reactions[msg.id] && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="text-lg ml-2 mt-1"
+                >
+                  {reactions[msg.id]}
+                </motion.div>
+              )}
+            </div>
+            {msg.isOwn && <span className="text-xl">{msg.avatar}</span>}
+          </motion.div>
+        ))}
+        
+        {isTyping && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex items-center gap-2"
+          >
+            <span className="text-xl">👩</span>
+            <div className="flex items-center gap-1 bg-gray-700 px-4 py-2 rounded-2xl rounded-bl-none">
+              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
+              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></div>
+            </div>
+          </motion.div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input Section */}
+      <div className="p-4 border-t border-gray-700 bg-gradient-to-t from-slate-900 to-slate-800">
+        <div className="flex items-center gap-2">
+          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl">➕</motion.button>
+          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} className="text-cyan-400 hover:text-cyan-300 transition-colors text-xl">😊</motion.button>
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+            placeholder="Aa"
+            className="flex-1 bg-gray-700 text-white placeholder-gray-500 px-4 py-2.5 rounded-full focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
+          />
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => sendMessage()}
+            className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-4 py-2.5 rounded-full font-bold transition-all hover:shadow-lg hover:shadow-cyan-500/50"
+          >
+            ❤️
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+export default ChatWindow;
