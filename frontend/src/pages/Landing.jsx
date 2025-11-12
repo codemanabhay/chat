@@ -1,2 +1,191 @@
-import React,{useState,useEffect}from'react';import{motion}from'framer-motion';import{Link}from'react-router-dom';import Button from'../components/Button';import AnimatedBackground from'../components/AnimatedBackground';import{ANIMATIONS}from'../utils/animations';const Landing=()=>{const[email,setEmail]=useState('');const[scrollY,setScrollY]=useState(0);useEffect(()=>{const handleScroll=()=>setScrollY(window.scrollY);window.addEventListener('scroll',handleScroll);return()=>window.removeEventListener('scroll',handleScroll);},[]);const features=[{icon:'💬',title:'Real-Time Chat',desc:'Instant messaging with Socket.io for seamless conversations'},{icon:'🔐',title:'Secure & Private',desc:'End-to-end encryption keeping your messages safe'},{icon:'🚀',title:'Lightning Fast',desc:'Optimized performance with sub-100ms latency'},{icon:'📱',title:'Mobile Optimized',desc:'Beautiful experience on all devices and screen sizes'},{icon:'🎨',title:'Gorgeous UI',desc:'Stunning 3D animations and modern design system'},{icon:'🌙',title:'Dark Mode',desc:'Easy on the eyes with beautiful dark theme'}];const testimonials=[{name:'Alex Kumar',role:'Product Designer',text:'The UI/UX is absolutely stunning. This is the future of chat applications.',avatar:'AK'},{name:'Sarah Chen',role:'Developer',text:'Best real-time chat framework. Socket.io integration works flawlessly.',avatar:'SC'},{name:'Mike Johnson',role:'Entrepreneur',text:'Launched our startup with this tech stack. Incredible experience!',avatar:'MJ'}];return(<>< AnimatedBackground/><motion.div initial={{opacity:0}}animate={{opacity:1}}transition={{duration:1}}className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden"style={{perspective:'1200px'}}>< motion.section className="min-h-screen flex items-center justify-center relative px-4 md:px-8"initial={{y:100,opacity:0}}animate={{y:0,opacity:1}}transition={{duration:.8}}>< div className="absolute inset-0 pointer-events-none"><div className="absolute top-20 left-10 w-72 h-72 bg-purple-600/20 rounded-full blur-3xl animate-pulse"/><div className="absolute bottom-20 right-10 w-72 h-72 bg-cyan-600/20 rounded-full blur-3xl animate-pulse" style={{animationDelay:'.5s'}}/></div><div className="max-w-5xl mx-auto text-center relative z-10"><motion.div initial={{scale:.5,opacity:0}}animate={{scale:1,opacity:1}}transition={{duration:.6}}><h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-6 bg-gradient-to-r from-cyan-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent leading-tight">Connect Instantly</h1></motion.div><motion.p initial={{y:20,opacity:0}}animate={{y:0,opacity:1}}transition={{delay:.2,duration:.6}}className="text-lg md:text-2xl text-gray-300 mb-8 leading-relaxed">Experience the ultimate real-time chat platform with stunning 3D animations, military-grade security, and lightning-fast performance.</motion.p><motion.div initial={{y:20,opacity:0}}animate={{y:0,opacity:1}}transition={{delay:.4,duration:.6}}className="flex flex-col sm:flex-row gap-4 justify-center mb-12"><Link to="/login"><Button>Get Started</Button></Link><Link to="/about"><button className="px-8 py-4 border-2 border-purple-500 text-purple-300 font-bold rounded-lg hover:bg-purple-500/20 transition-all duration-300 hover:border-cyan-400">Learn More</button></Link></motion.div><motion.div initial={{y:40,opacity:0}}animate={{y:0,opacity:1}}transition={{delay:.6,duration:.8,type:'spring'}}className="relative"style={{transform:`perspective(1000px)rotateX(${scrollY*0.01}deg)`}}>< div className="relative group"><div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition duration-300"/><div className="relative bg-slate-800/80 backdrop-blur-xl p-1 rounded-2xl border border-purple-500/20"><div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-8 md:p-12"><div className="text-4xl mb-4">💬</div><p className="text-gray-300 text-sm md:text-base">Join 50,000+ users connecting globally</p></div></div></div></motion.div></div></motion.section><motion.section className="py-20 md:py-32 px-4 md:px-8 relative"initial={{opacity:0}}whileInView={{opacity:1}}transition={{duration:.8}}viewport={{once:true}}>< div className="max-w-6xl mx-auto"><motion.div initial={{y:40,opacity:0}}whileInView={{y:0,opacity:1}}transition={{duration:.6}}viewport={{once:true}}className="text-center mb-16"><h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">Powerful Features</h2><div className="w-16 h-1 bg-gradient-to-r from-cyan-500 to-purple-500 mx-auto rounded-full"/></motion.div><motion.div variants={ANIMATIONS.container}initial="hidden"whileInView="show"viewport={{once:true}}className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"><motion.div variants={ANIMATIONS.item}key="feat-1"className="group p-8 rounded-2xl bg-gradient-to-br from-purple-600/10 to-cyan-600/10 border border-purple-500/20 hover:border-cyan-400/40 transition-all duration-300 hover:shadow-2xl hover:shadow-cyan-500/20"style={{transform:'translateZ(0)'}}><div className="text-5xl mb-4 transform group-hover:scale-110 transition duration-300">{features[0].icon}</div><h3 className="text-xl font-bold text-white mb-3">{features[0].title}</h3><p className="text-gray-300">{features[0].desc}</p></motion.div><motion.div variants={ANIMATIONS.item}key="feat-2"className="group p-8 rounded-2xl bg-gradient-to-br from-purple-600/10 to-cyan-600/10 border border-purple-500/20 hover:border-cyan-400/40 transition-all duration-300 hover:shadow-2xl hover:shadow-cyan-500/20"style={{transform:'translateZ(0)'}}><div className="text-5xl mb-4 transform group-hover:scale-110 transition duration-300">{features[1].icon}</div><h3 className="text-xl font-bold text-white mb-3">{features[1].title}</h3><p className="text-gray-300">{features[1].desc}</p></motion.div><motion.div variants={ANIMATIONS.item}key="feat-3"className="group p-8 rounded-2xl bg-gradient-to-br from-purple-600/10 to-cyan-600/10 border border-purple-500/20 hover:border-cyan-400/40 transition-all duration-300 hover:shadow-2xl hover:shadow-cyan-500/20"style={{transform:'translateZ(0)'}}><div className="text-5xl mb-4 transform group-hover:scale-110 transition duration-300">{features[2].icon}</div><h3 className="text-xl font-bold text-white mb-3">{features[2].title}</h3><p className="text-gray-300">{features[2].desc}</p></motion.div><motion.div variants={ANIMATIONS.item}key="feat-4"className="group p-8 rounded-2xl bg-gradient-to-br from-purple-600/10 to-cyan-600/10 border border-purple-500/20 hover:border-cyan-400/40 transition-all duration-300 hover:shadow-2xl hover:shadow-cyan-500/20"style={{transform:'translateZ(0)'}}><div className="text-5xl mb-4 transform group-hover:scale-110 transition duration-300">{features[3].icon}</div><h3 className="text-xl font-bold text-white mb-3">{features[3].title}</h3><p className="text-gray-300">{features[3].desc}</p></motion.div><motion.div variants={ANIMATIONS.item}key="feat-5"className="group p-8 rounded-2xl bg-gradient-to-br from-purple-600/10 to-cyan-600/10 border border-purple-500/20 hover:border-cyan-400/40 transition-all duration-300 hover:shadow-2xl hover:shadow-cyan-500/20"style={{transform:'translateZ(0)'}}><div className="text-5xl mb-4 transform group-hover:scale-110 transition duration-300">{features[4].icon}</div><h3 className="text-xl font-bold text-white mb-3">{features[4].title}</h3><p className="text-gray-300">{features[4].desc}</p></motion.div><motion.div variants={ANIMATIONS.item}key="feat-6"className="group p-8 rounded-2xl bg-gradient-to-br from-purple-600/10 to-cyan-600/10 border border-purple-500/20 hover:border-cyan-400/40 transition-all duration-300 hover:shadow-2xl hover:shadow-cyan-500/20"style={{transform:'translateZ(0)'}}><div className="text-5xl mb-4 transform group-hover:scale-110 transition duration-300">{features[5].icon}</div><h3 className="text-xl font-bold text-white mb-3">{features[5].title}</h3><p className="text-gray-300">{features[5].desc}</p></motion.div></motion.div></div></motion.section><motion.section className="py-20 md:py-32 px-4 md:px-8 relative"initial={{opacity:0}}whileInView={{opacity:1}}transition={{duration:.8}}viewport={{once:true}}>< div className="max-w-6xl mx-auto"><motion.div initial={{y:40,opacity:0}}whileInView={{y:0,opacity:1}}transition={{duration:.6}}viewport={{once:true}}className="text-center mb-16"><h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">Loved by Users</h2><div className="w-16 h-1 bg-gradient-to-r from-cyan-500 to-purple-500 mx-auto rounded-full"/></motion.div><motion.div variants={ANIMATIONS.container}initial="hidden"whileInView="show"viewport={{once:true}}className="grid md:grid-cols-3 gap-8">{testimonials.map((testimonial,idx)=>(<motion.div key={idx}variants={ANIMATIONS.item}className="p-8 rounded-2xl bg-gradient-to-br from-purple-600/10 to-cyan-600/10 border border-purple-500/20 hover:border-cyan-400/40 transition-all duration-300"><div className="flex items-center gap-4 mb-4"><div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-purple-500 flex items-center justify-center text-white font-bold">{testimonial.avatar}</div><div><p className="text-white font-bold">{testimonial.name}</p><p className="text-gray-400 text-sm">{testimonial.role}</p></div></div><p className="text-gray-300 italic">"{testimonial.text}"</p></motion.div>))}</motion.div></div></motion.section><motion.section className="py-20 md:py-32 px-4 md:px-8"initial={{opacity:0}}whileInView={{opacity:1}}transition={{duration:.8}}viewport={{once:true}}>< div className="max-w-4xl mx-auto text-center"><motion.div initial={{scale:.8,opacity:0}}whileInView={{scale:1,opacity:1}}transition={{duration:.6}}viewport={{once:true}}><h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">Ready to Connect?</h2><p className="text-xl text-gray-300 mb-8">Join thousands of users communicating in real-time. Sign up now and start messaging instantly.</p><div className="flex flex-col sm:flex-row gap-4 justify-center"><Link to="/register"><Button>Create Account</Button></Link><Link to="/login"><button className="px-8 py-4 border-2 border-purple-500 text-purple-300 font-bold rounded-lg hover:bg-purple-500/20 transition-all duration-300">Sign In</button></Link></div></motion.div></div></motion.section></motion.div></>
-);};export default Landing;
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import Navbar from '../components/Navbar';
+
+const Landing = () => {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8 } },
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <Navbar />
+
+      {/* Hero Section */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+        className="relative overflow-hidden py-20 px-4 sm:px-6 lg:px-8"
+      >
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="text-center"
+          >
+            <motion.h1
+              variants={itemVariants}
+              className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-pulse"
+            >
+              Welcome to Chat Pro틚틚
+            </motion.h1>
+
+            <motion.p
+              variants={itemVariants}
+              className="text-xl md:text-2xl text-gray-300 mb-8 leading-relaxed max-w-3xl mx-auto"
+            >
+              Experience the next generation of real-time communication with stunning 3D animations, instant messaging, and immersive user experience.
+            </motion.p>
+
+            <motion.div
+              variants={itemVariants}
+              className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
+            >
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Link
+                  to="/register"
+                  className="px-8 py-4 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold text-lg transition-all shadow-lg hover:shadow-cyan-500/50"
+                >
+                  Get Started 🚀
+                </Link>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Link
+                  to="/login"
+                  className="px-8 py-4 rounded-lg border-2 border-cyan-500 text-cyan-400 hover:text-cyan-300 font-bold text-lg transition-all hover:bg-cyan-500/10"
+                >
+                  Sign In 🔐
+                </Link>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </motion.div>
+
+      {/* Features Section */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-transparent to-slate-900/50"
+      >
+        <div className="max-w-7xl mx-auto">
+          <motion.h2
+            initial={{ opacity: 0, y: -20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className="text-4xl md:text-5xl font-bold text-center mb-16 bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent"
+          >
+            Why Choose Chat Pro?
+          </motion.h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { icon: '🚀', title: 'Lightning Fast', desc: 'Real-time messaging with millisecond latency' },
+              { icon: '🔐', title: 'Secure', desc: 'End-to-end encryption for all conversations' },
+              { icon: '✨', title: 'Beautiful UI', desc: '3D animations and smooth transitions' },
+              { icon: '🌐', title: 'Global', desc: 'Connect with users worldwide instantly' },
+              { icon: '📹', title: 'Stories', desc: 'Share your moments with Instagram-style stories' },
+              { icon: '🤖', title: 'AI Assistant', desc: 'Meta AI chatbot for instant help' },
+            ].map((feature, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 0.1 }}
+                whileHover={{ scale: 1.05 }}
+                className="p-6 rounded-xl bg-gradient-to-br from-cyan-500/10 to-purple-500/10 border border-cyan-500/20 hover:border-cyan-500/50 transition-all cursor-pointer"
+              >
+                <div className="text-4xl mb-4">{feature.icon}</div>
+                <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
+                <p className="text-gray-400">{feature.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Testimonials */}
+      <motion.div className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <motion.h2
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            className="text-4xl md:text-5xl font-bold text-center mb-16 bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent"
+          >
+            What Our Users Say
+          </motion.h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              { name: 'Sarah Johnson', role: 'Designer', text: 'Chat Pro has revolutionized how I communicate with my team!', rating: 5 },
+              { name: 'Mike Chen', role: 'Developer', text: 'The 3D animations are absolutely stunning and performant!', rating: 5 },
+              { name: 'Emma Wilson', role: 'Entrepreneur', text: 'Best chat app I\'ve ever used. Highly recommended!', rating: 5 },
+            ].map((testimonial, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.15 }}
+                className="p-6 rounded-xl bg-gray-800/50 border border-gray-700 hover:border-cyan-500/50 transition-all"
+              >
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-purple-500 mr-4 flex items-center justify-center">👤</div>
+                  <div>
+                    <h4 className="font-bold text-white">{testimonial.name}</h4>
+                    <p className="text-sm text-gray-400">{testimonial.role}</p>
+                  </div>
+                </div>
+                <p className="text-gray-300 mb-4 italic">"{testimonial.text}"</p>
+                <div className="flex gap-1 text-yellow-400">{[...Array(testimonial.rating)].map((_, i) => <span key={i}>⭐</span>)}</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* CTA Section */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        className="py-20 px-4 sm:px-6 lg:px-8 text-center"
+      >
+        <motion.div
+          initial={{ scale: 0.9 }}
+          whileInView={{ scale: 1 }}
+          className="max-w-2xl mx-auto"
+        >
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Ready to Join?</h2>
+          <p className="text-xl text-gray-300 mb-8">Start connecting with millions of users today.</p>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Link
+              to="/register"
+              className="inline-block px-10 py-4 rounded-lg bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 hover:shadow-2xl hover:shadow-purple-500/50 text-white font-bold text-lg transition-all"
+            >
+              Create Account Now 🚀
+            </Link>
+          </motion.div>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+};
+
+export default Landing;
